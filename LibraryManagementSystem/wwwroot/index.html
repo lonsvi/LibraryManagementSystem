@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Библиотека</h1>
+        <button class="btn btn-logout" onclick="logout()">Выйти</button>
+    </header>
+    <main>
+        <input type="text" id="search" class="search-input" placeholder="Поиск по названию, автору, жанру или ISBN...">
+        <div id="finesAlert" class="alert alert-error"></div>
+        <section id="adminPanel" class="admin-panel">
+            <h2>Панель библиотекаря</h2>
+            <div class="form-group">
+                <h3>Добавить книгу</h3>
+                <form id="addBookForm" class="form">
+                    <input type="text" id="title" placeholder="Название" required>
+                    <input type="text" id="author" placeholder="Автор" required>
+                    <input type="number" id="year" placeholder="Год" required>
+                    <input type="text" id="coverUrl" placeholder="URL обложки">
+                    <input type="text" id="description" placeholder="Описание">
+                    <input type="text" id="genre" placeholder="Жанр">
+                    <input type="text" id="isbn" placeholder="ISBN">
+                    <button type="button" class="btn btn-primary" onclick="addBook()">Добавить</button>
+                </form>
+            </div>
+            <div class="form-group">
+                <h3>Редактировать книгу</h3>
+                <form id="editBookForm" class="form">
+                    <select id="editBookSelect" class="select"></select>
+                    <input type="text" id="editTitle" placeholder="Название" required>
+                    <input type="text" id="editAuthor" placeholder="Автор" required>
+                    <input type="number" id="editYear" placeholder="Год" required>
+                    <input type="text" id="editCoverUrl" placeholder="URL обложки">
+                    <input type="text" id="editDescription" placeholder="Описание">
+                    <input type="text" id="editGenre" placeholder="Жанр">
+                    <input type="text" id="editISBN" placeholder="ISBN">
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="updateBook()">Сохранить</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteBook()">Удалить</button>
+                    </div>
+                </form>
+            </div>
+            <div class="form-group">
+                <h3>Зарегистрировать пользователя</h3>
+                <form id="registerForm" class="form">
+                    <input type="text" id="newUsername" placeholder="Имя пользователя" required>
+                    <input type="password" id="newPassword" placeholder="Пароль" required>
+                    <select id="newRole" class="select">
+                        <option value="User">Пользователь</option>
+                        <option value="Librarian">Библиотекарь</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" onclick="registerUser()">Зарегистрировать</button>
+                </form>
+            </div>
+            <div class="form-group">
+                <h3>Добавить абонемент</h3>
+                <form id="subscriptionForm" class="form">
+                    <select id="subscriptionUserSelect" class="select"></select>
+                    <input type="date" id="subscriptionStartDate" required>
+                    <input type="date" id="subscriptionEndDate" required>
+                    <button type="button" class="btn btn-primary" onclick="addSubscription()">Добавить</button>
+                </form>
+            </div>
+            <div class="form-group">
+                <h3>Выдать книгу</h3>
+                <form id="rentForm" class="form">
+                    <select id="bookSelect" class="select"></select>
+                    <select id="userSelect" class="select"></select>
+                    <button type="button" class="btn btn-primary" onclick="rentBook()">Выдать</button>
+                </form>
+            </div>
+            <div class="form-group">
+                <h3>Управление арендой</h3>
+                <form id="rentalForm" class="form">
+                    <select id="rentalSelect" class="select"></select>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="returnBook()">Вернуть</button>
+                        <button type="button" class="btn btn-secondary" onclick="extendRental()">Продлить</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+        <section class="books-section">
+            <div class="section-header">
+                <h2>Список книг</h2>
+                <button class="btn btn-secondary" onclick="toggleView()">Плитки/Таблица</button>
+            </div>
+            <div id="bookGrid" class="book-grid"></div>
+            <table id="bookTable" class="book-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Обложка</th>
+                        <th>Название</th>
+                        <th>Автор</th>
+                        <th>Год</th>
+                        <th>Жанр</th>
+                        <th>ISBN</th>
+                        <th>Статус</th>
+                        <th>Описание</th>
+                    </tr>
+                </thead>
+                <tbody id="bookTableBody"></tbody>
+            </table>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
