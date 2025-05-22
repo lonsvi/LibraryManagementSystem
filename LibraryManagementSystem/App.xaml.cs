@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Media.Animation;
 
 namespace LibraryManagementSystem
 {
-    /// <summary>
-    /// Логика взаимодействия для App.xaml
-    /// </summary>
     public partial class App : Application
     {
+        public void StartStoryboard(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.Tag is Storyboard storyboard)
+            {
+                storyboard.Begin();
+            }
+        }
     }
 }

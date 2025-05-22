@@ -5,7 +5,7 @@ let users = [];
 let rentals = [];
 let subscriptions = [];
 let isTableView = false;
-let pendingRequests = new Set(); // Отслеживание активных запросов
+let pendingRequests = new Set();
 
 function navigateTo(page) {
     console.log(`Navigating to: ${page}`);
@@ -19,7 +19,10 @@ function login() {
         alert('Введите имя пользователя и пароль');
         return;
     }
+    const loader = document.getElementById('loginLoader');
+    if (loader) loader.classList.add('active');
     console.log(`Sending login request for username: ${username}`);
+    pendingRequests.add('LoginUser');
     window.chrome.webview.postMessage({
         Action: 'LoginUser',
         Data: { Username: username, Password: password }
@@ -332,7 +335,6 @@ function displayBooks(booksToDisplay) {
     const grid = document.getElementById('bookGrid');
     const table = document.getElementById('bookTable');
     if (grid && table) {
-        // Убрали принудительный reflow для оптимизации
         if (isTableView) {
             displayBooksTable(booksToDisplay);
         } else {
@@ -351,7 +353,7 @@ function displayBooksGrid(booksToDisplay) {
         booksToDisplay.forEach(book => {
             console.log('Displaying book:', book);
             const card = document.createElement('div');
-            card.className = 'book-card fade-in'; // Анимация на уровне элемента
+            card.className = 'book-card fade-in';
             const img = document.createElement('img');
             const src = book.CoverUrl && book.CoverUrl.startsWith('images/')
                 ? book.CoverUrl
@@ -399,7 +401,7 @@ function displayBooksTable(booksToDisplay) {
         tbody.innerHTML = '';
         booksToDisplay.forEach(book => {
             const row = document.createElement('tr');
-            row.className = 'fade-in'; // Анимация на уровне строки
+            row.className = 'fade-in';
             row.innerHTML = `
                 <td><img src="${book.CoverUrl || 'https://placekitten.com/150/150'}" alt="${escapeHtml(book.Title)}" style="max-width: 60px;"></td>
                 <td>${escapeHtml(book.Title)}</td>
@@ -443,7 +445,6 @@ window.chrome.webview.addEventListener('message', event => {
                 const data = JSON.parse(response);
                 if (data[0]?.Title) { // Books
                     books = data;
-                    // Сохраняем в localStorage только при изменении книг
                     localStorage.setItem('books', JSON.stringify(books));
                     displayBooks(books);
                     populateBookSelect(books);
@@ -464,6 +465,8 @@ window.chrome.webview.addEventListener('message', event => {
                 }
             } else if (response.startsWith('{')) { // Login response
                 const user = JSON.parse(response);
+                const loader = document.getElementById('loginLoader');
+                if (loader) loader.classList.remove('active');
                 if (user.Id) {
                     currentUser = user;
                     isLibrarian = currentUser.Role === 'Librarian';
@@ -474,9 +477,9 @@ window.chrome.webview.addEventListener('message', event => {
                 } else {
                     alert('Неверный логин или пароль');
                 }
+                pendingRequests.delete('LoginUser');
             } else {
                 alert(response);
-                // Проверяем, было ли действие, требующее обновления данных
                 const actions = [
                     'Книга добавлена успешно',
                     'Книга обновлена успешно',
@@ -497,8 +500,7 @@ window.chrome.webview.addEventListener('message', event => {
                     window.chrome.webview.postMessage({ Action: 'GetUsers' });
                     window.chrome.webview.postMessage({ Action: 'GetRentals' });
                     window.chrome.webview.postMessage({ Action: 'GetSubscriptions' });
-                    // Удаляем запрос действия из pendingRequests
-                    pendingRequests.delete(response.replace(/ .*/, '')); // Например, 'AddBook' из 'Книга добавлена успешно'
+                    pendingRequests.delete(response.replace(/ .*/, ''));
                 }
             }
         } else {
@@ -508,6 +510,8 @@ window.chrome.webview.addEventListener('message', event => {
     } catch (error) {
         console.error('Error processing response:', error, response);
         alert(`Ошибка обработки ответа: ${error.message}`);
+        const loader = document.getElementById('loginLoader');
+        if (loader) loader.classList.remove('active');
     }
 });
 
@@ -520,7 +524,6 @@ if (window.location.pathname.endsWith('index.html')) {
     } else {
         isLibrarian = currentUser.Role === 'Librarian';
         document.getElementById('adminPanel').className = isLibrarian ? 'admin-panel active' : 'admin-panel';
-        // Инициируем загрузку данных
         pendingRequests.add('GetBooks');
         pendingRequests.add('GetUsers');
         pendingRequests.add('GetRentals');

@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Web.WebView2.Core;
+﻿using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -23,30 +22,63 @@ namespace LibraryManagementSystem
         {
             try
             {
+                // Лоадер уже виден из XAML
                 await WebView.EnsureCoreWebView2Async(null);
                 WebView.CoreWebView2.WebMessageReceived += WebView_WebMessageReceived;
-                WebView.CoreWebView2.OpenDevToolsWindow();
                 WebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
                 WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
                 WebView.CoreWebView2.Settings.IsScriptEnabled = true;
                 WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
-                WebView.CoreWebView2.Profile.ClearBrowsingDataAsync();
+                await WebView.CoreWebView2.Profile.ClearBrowsingDataAsync();
                 WebView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
                 WebView.CoreWebView2.WebResourceRequested += (s, args) =>
                 {
                     args.Request.Headers.SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
                 };
+
+                // Устанавливаем тёмный фон для WebView2
+                WebView.CoreWebView2.ExecuteScriptAsync("document.body.style.backgroundColor = '#1a1a1a';");
+
                 string htmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "login.html");
                 if (!File.Exists(htmlPath))
                 {
                     MessageBox.Show($"HTML файл не найден: {htmlPath}");
+                    AppLoader.Visibility = Visibility.Collapsed;
                     return;
                 }
+
+                // Ждём полной загрузки DOM
+                WebView.CoreWebView2.NavigationCompleted += async (s, args) =>
+                {
+                    if (args.IsSuccess)
+                    {
+                        // Ждём, пока DOM полностью загрузится
+                        await WebView.CoreWebView2.ExecuteScriptAsync(@"
+                            new Promise(resolve => {
+                                if (document.readyState === 'complete') {
+                                    resolve();
+                                } else {
+                                    window.addEventListener('load', resolve);
+                                }
+                            });
+                        ");
+                        // Показываем WebView2 и скрываем лоадер
+                        WebView.Visibility = Visibility.Visible;
+                        AppLoader.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Ошибка загрузки страницы: {args.WebErrorStatus}");
+                        AppLoader.Visibility = Visibility.Collapsed;
+                    }
+                };
+
                 WebView.Source = new Uri($"file:///{htmlPath}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка WebView2: {ex.Message}");
+                AppLoader.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -80,7 +112,6 @@ namespace LibraryManagementSystem
 
         private void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs args)
         {
-            LoadingProgressBar.Visibility = Visibility.Visible;
             var message = JsonConvert.DeserializeObject<Message>(args.WebMessageAsJson);
             try
             {
@@ -170,17 +201,11 @@ namespace LibraryManagementSystem
                     default:
                         SendResponse("Неизвестное действие");
                         break;
-
                 }
-
             }
             catch (Exception ex)
             {
                 SendResponse($"Ошибка: {ex.Message}");
-            }
-            finally
-            {
-                LoadingProgressBar.Visibility = Visibility.Collapsed;
             }
         }
 
