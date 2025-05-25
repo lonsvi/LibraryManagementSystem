@@ -16,10 +16,12 @@ function navigateTo(page) {
 function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const button = document.querySelector('#loginForm button');
     if (!username || !password) {
         alert('Введите имя пользователя и пароль');
         return;
     }
+    button.disabled = true;
     const loader = document.getElementById('loginLoader');
     if (loader) loader.classList.add('active');
     console.log(`Sending login request for username: ${username}`);
@@ -28,6 +30,15 @@ function login() {
         Action: 'LoginUser',
         Data: { Username: username, Password: password }
     });
+    setTimeout(() => {
+        if (pendingRequests.has('LoginUser')) {
+            console.error('LoginUser request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос входа. Попробуйте снова.');
+            pendingRequests.delete('LoginUser');
+            button.disabled = false;
+            if (loader) loader.classList.remove('active');
+        }
+    }, 30000);
 }
 
 function logout() {
@@ -63,6 +74,8 @@ function addBook() {
         alert('Только библиотекари могут добавлять книги');
         return;
     }
+    const button = document.querySelector('#addBookForm button');
+    button.disabled = true;
     const book = {
         Title: document.getElementById('title').value,
         Author: document.getElementById('author').value,
@@ -74,74 +87,38 @@ function addBook() {
     };
     if (!book.Title || !book.Author || !book.Year) {
         alert('Заполните обязательные поля: название, автор, год');
+        button.disabled = false;
         return;
     }
     if (book.CoverUrl && !isValidUrl(book.CoverUrl) && !book.CoverUrl.startsWith('images/')) {
         alert('Некорректный URL обложки');
+        button.disabled = false;
         return;
     }
     console.log('Adding book:', book);
     pendingRequests.add('AddBook');
     window.chrome.webview.postMessage({ Action: 'AddBook', Data: book });
+    setTimeout(() => {
+        if (pendingRequests.has('AddBook')) {
+            console.error('AddBook request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос добавления книги. Попробуйте снова.');
+            pendingRequests.delete('AddBook');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
+// Функции редактирования отключены
 function updateBook() {
-    if (!isLibrarian) {
-        alert('Только библиотекари могут редактировать книги');
-        return;
-    }
-    const bookId = parseInt(document.getElementById('editBookSelect').value);
-    if (!bookId) {
-        alert('Выберите книгу для редактирования');
-        return;
-    }
-    const book = {
-        Id: bookId,
-        Title: document.getElementById('editTitle').value,
-        Author: document.getElementById('editAuthor').value,
-        Year: parseInt(document.getElementById('editYear').value),
-        CoverUrl: document.getElementById('editCoverUrl').value,
-        Description: document.getElementById('editDescription').value,
-        Genre: document.getElementById('editGenre').value,
-        ISBN: document.getElementById('editISBN').value,
-        IsAvailable: books.find(b => b.Id === bookId)?.IsAvailable ?? true
-    };
-    if (!book.Title || !book.Author || !book.Year) {
-        alert('Заполните обязательные поля: название, автор, год');
-        return;
-    }
-    if (book.CoverUrl && !isValidUrl(book.CoverUrl) && !book.CoverUrl.startsWith('images/')) {
-        alert('Некорректный URL обложки');
-        return;
-    }
-    console.log('Updating book:', book);
-    pendingRequests.add('UpdateBook');
-    window.chrome.webview.postMessage({ Action: 'UpdateBook', Data: book });
-
-    setTimeout(() => {
-        if (pendingRequests.has('UpdateBook')) {
-            console.error('UpdateBook request timed out after 10 seconds');
-            alert('Сервер не ответил на запрос обновления книги. Изменения могут быть не сохранены.');
-            pendingRequests.delete('UpdateBook');
-        }
-    }, 10000);
+    alert('Функция редактирования находится в переработке.');
 }
 
 function deleteBook() {
-    if (!isLibrarian) {
-        alert('Только библиотекари могут удалять книги');
-        return;
-    }
-    const bookId = parseInt(document.getElementById('editBookSelect').value);
-    if (!bookId) {
-        alert('Выберите книгу для удаления');
-        return;
-    }
-    if (confirm('Вы уверены, что хотите удалить книгу?')) {
-        console.log('Deleting book:', bookId);
-        pendingRequests.add('DeleteBook');
-        window.chrome.webview.postMessage({ Action: 'DeleteBook', Data: bookId });
-    }
+    alert('Функция удаления находится в переработке.');
+}
+
+function saveBookFromModal() {
+    alert('Функция редактирования находится в переработке.');
 }
 
 function isValidUrl(url) {
@@ -158,6 +135,8 @@ function registerUser() {
         alert('Только библиотекари могут регистрировать пользователей');
         return;
     }
+    const button = document.querySelector('#registerForm button');
+    button.disabled = true;
     const user = {
         Username: document.getElementById('newUsername').value,
         Password: document.getElementById('newPassword').value,
@@ -165,11 +144,20 @@ function registerUser() {
     };
     if (!user.Username || !user.Password) {
         alert('Заполните имя пользователя и пароль');
+        button.disabled = false;
         return;
     }
     console.log('Registering user:', user);
     pendingRequests.add('RegisterUser');
     window.chrome.webview.postMessage({ Action: 'RegisterUser', Data: user });
+    setTimeout(() => {
+        if (pendingRequests.has('RegisterUser')) {
+            console.error('RegisterUser request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос регистрации пользователя. Попробуйте снова.');
+            pendingRequests.delete('RegisterUser');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
 function addSubscription() {
@@ -177,6 +165,8 @@ function addSubscription() {
         alert('Только библиотекари могут добавлять абонементы');
         return;
     }
+    const button = document.querySelector('#subscriptionForm button');
+    button.disabled = true;
     const subscription = {
         UserId: parseInt(document.getElementById('subscriptionUserSelect').value),
         StartDate: new Date(document.getElementById('subscriptionStartDate').value),
@@ -184,15 +174,25 @@ function addSubscription() {
     };
     if (!subscription.UserId || !subscription.StartDate || !subscription.EndDate) {
         alert('Заполните все поля для абонемента');
+        button.disabled = false;
         return;
     }
     if (subscription.EndDate <= subscription.StartDate) {
         alert('Дата окончания должна быть позже даты начала');
+        button.disabled = false;
         return;
     }
     console.log('Adding subscription:', subscription);
     pendingRequests.add('AddSubscription');
     window.chrome.webview.postMessage({ Action: 'AddSubscription', Data: subscription });
+    setTimeout(() => {
+        if (pendingRequests.has('AddSubscription')) {
+            console.error('AddSubscription request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос добавления абонемента. Попробуйте снова.');
+            pendingRequests.delete('AddSubscription');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
 function rentBook() {
@@ -200,6 +200,8 @@ function rentBook() {
         alert('Только библиотекари могут выдавать книги');
         return;
     }
+    const button = document.querySelector('#rentForm button');
+    button.disabled = true;
     const rental = {
         BookId: parseInt(document.getElementById('bookSelect').value),
         UserId: parseInt(document.getElementById('userSelect').value),
@@ -209,15 +211,25 @@ function rentBook() {
     };
     if (!rental.BookId || !rental.UserId) {
         alert('Выберите книгу и пользователя');
+        button.disabled = false;
         return;
     }
     if (!books.find(b => b.Id === rental.BookId)?.IsAvailable) {
         alert('Книга уже выдана');
+        button.disabled = false;
         return;
     }
     console.log('Renting book:', rental);
     pendingRequests.add('RentBook');
     window.chrome.webview.postMessage({ Action: 'RentBook', Data: rental });
+    setTimeout(() => {
+        if (pendingRequests.has('RentBook')) {
+            console.error('RentBook request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос выдачи книги. Попробуйте снова.');
+            pendingRequests.delete('RentBook');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
 function returnBook() {
@@ -225,14 +237,25 @@ function returnBook() {
         alert('Только библиотекари могут принимать возврат книг');
         return;
     }
+    const button = document.querySelector('#rentalForm .btn-primary');
+    button.disabled = true;
     const rentalId = parseInt(document.getElementById('rentalSelect').value);
     if (!rentalId) {
         alert('Выберите аренду для возврата');
+        button.disabled = false;
         return;
     }
     console.log('Returning book, rental:', rentalId);
     pendingRequests.add('ReturnBook');
     window.chrome.webview.postMessage({ Action: 'ReturnBook', Data: rentalId });
+    setTimeout(() => {
+        if (pendingRequests.has('ReturnBook')) {
+            console.error('ReturnBook request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос возврата книги. Попробуйте снова.');
+            pendingRequests.delete('ReturnBook');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
 function extendRental() {
@@ -240,14 +263,25 @@ function extendRental() {
         alert('Только библиотекари могут продлевать аренду');
         return;
     }
+    const button = document.querySelector('#rentalForm .btn-secondary');
+    button.disabled = true;
     const rentalId = parseInt(document.getElementById('rentalSelect').value);
     if (!rentalId) {
         alert('Выберите аренду для продления');
+        button.disabled = false;
         return;
     }
     console.log('Extending rental:', rentalId);
     pendingRequests.add('ExtendRental');
     window.chrome.webview.postMessage({ Action: 'ExtendRental', Data: rentalId });
+    setTimeout(() => {
+        if (pendingRequests.has('ExtendRental')) {
+            console.error('ExtendRental request timed out after 30 seconds');
+            alert('Сервер не ответил на запрос продления аренды. Попробуйте снова.');
+            pendingRequests.delete('ExtendRental');
+            button.disabled = false;
+        }
+    }, 30000);
 }
 
 function populateBookSelect(books) {
@@ -431,55 +465,6 @@ function closeEditModal() {
     modal.style.display = 'none';
 }
 
-function saveBookFromModal() {
-    if (!isLibrarian) {
-        alert('Только библиотекари могут редактировать книги');
-        return;
-    }
-    const bookId = parseInt(document.getElementById('modalBookId').value);
-    const updatedBook = {
-        Id: bookId,
-        Title: document.getElementById('modalTitle').value,
-        Author: document.getElementById('modalAuthor').value,
-        Year: parseInt(document.getElementById('modalYear').value),
-        CoverUrl: document.getElementById('modalCoverUrl').value,
-        Description: document.getElementById('modalDescription').value,
-        Genre: document.getElementById('modalGenre').value,
-        ISBN: document.getElementById('modalISBN').value,
-        IsAvailable: books.find(b => b.Id === bookId)?.IsAvailable ?? true
-    };
-    if (!updatedBook.Title || !updatedBook.Author || !updatedBook.Year) {
-        alert('Заполните обязательные поля: название, автор, год');
-        return;
-    }
-    if (updatedBook.CoverUrl && !isValidUrl(updatedBook.CoverUrl) && !updatedBook.CoverUrl.startsWith('images/')) {
-        alert('Некорректный URL обложки');
-        return;
-    }
-    console.log('Updating book from modal, sending to server:', updatedBook);
-
-    const bookIndex = books.findIndex(b => b.Id === bookId);
-    if (bookIndex !== -1) {
-        books[bookIndex] = updatedBook;
-        displayBooks(books);
-        populateBookSelect(books);
-        populateEditBookForm();
-    }
-
-    pendingRequests.add('UpdateBook');
-    window.chrome.webview.postMessage({ Action: 'UpdateBook', Data: updatedBook });
-
-    setTimeout(() => {
-        if (pendingRequests.has('UpdateBook')) {
-            console.error('UpdateBook request timed out after 10 seconds');
-            alert('Сервер не ответил на запрос обновления книги. Изменения могут быть не сохранены.');
-            pendingRequests.delete('UpdateBook');
-        }
-    }, 10000);
-
-    closeEditModal();
-}
-
 function checkFinesAlert() {
     const overdue = rentals.filter(r => !r.ReturnDate && new Date(r.DueDate) < new Date());
     const finesAlert = document.getElementById('finesAlert');
@@ -581,7 +566,7 @@ function displayBooksTable(booksToDisplay) {
                 <td style="color: ${book.IsAvailable ? '#4caf50' : '#cc0000'}">${book.IsAvailable ? 'Доступна' : 'Выдана'}</td>
                 <td>${escapeHtml(book.Description || '')}</td>
                 <td>
-                    ${isLibrarian ? `<button class="btn btn-primary btn-small" onclick="openEditModal(${book.Id})"><i class="fas fa-edit"></i> Редактировать</button>` : ''}
+                    ${isLibrarian ? `<button class="btn btn-primary btn-small" onclick="openEditModal(${book.Id})" disabled title="В переработке"><i class="fas fa-ban"></i> Редактировать</button>` : ''}
                 </td>
             `;
             tbody.appendChild(row);
@@ -627,6 +612,31 @@ function switchTab(tabName) {
     }
 }
 
+function showContextMenu(event, type) {
+    event.preventDefault();
+    const menu = document.createElement('div');
+    menu.className = 'custom-context-menu';
+    menu.innerHTML = '<div class="custom-context-menu-item">В переработке</div>';
+    document.body.appendChild(menu);
+
+    menu.style.left = event.pageX + 'px';
+    menu.style.top = event.pageY + 'px';
+
+    const handleClickOutside = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', handleClickOutside);
+        }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+
+    menu.addEventListener('click', () => {
+        menu.remove();
+        document.removeEventListener('click', handleClickOutside);
+    });
+}
+
 window.chrome.webview.addEventListener('message', event => {
     const response = event.data.Response;
     console.log('Received response from server:', response);
@@ -664,7 +674,9 @@ window.chrome.webview.addEventListener('message', event => {
             } else if (response.startsWith('{')) { // Login response
                 const user = JSON.parse(response);
                 const loader = document.getElementById('loginLoader');
+                const button = document.querySelector('#loginForm button');
                 if (loader) loader.classList.remove('active');
+                if (button) button.disabled = false;
                 if (user.Id) {
                     currentUser = user;
                     isLibrarian = currentUser.Role === 'Librarian';
@@ -692,7 +704,6 @@ window.chrome.webview.addEventListener('message', event => {
                     console.log('Action confirmed by server:', response);
                     if (response === 'Книга обновлена успешно') {
                         closeEditModal();
-                        pendingRequests.delete('UpdateBook');
                     }
                     pendingRequests.add('GetBooks');
                     pendingRequests.add('GetUsers');
@@ -702,22 +713,48 @@ window.chrome.webview.addEventListener('message', event => {
                     window.chrome.webview.postMessage({ Action: 'GetUsers' });
                     window.chrome.webview.postMessage({ Action: 'GetRentals' });
                     window.chrome.webview.postMessage({ Action: 'GetSubscriptions' });
-                    pendingRequests.delete(response.replace(/ .*/, ''));
-                } else if (!actions.includes(response)) {
+                    const actionKey = response.replace(/ .*/, '');
+                    pendingRequests.delete(actionKey);
+                    document.querySelectorAll('button:disabled').forEach(button => button.disabled = false);
+                } else {
                     console.error('Unexpected server response:', response);
                     alert('Сервер не подтвердил действие. Изменения могут быть не сохранены.');
                     pendingRequests.delete('UpdateBook');
+                    pendingRequests.delete('AddBook');
+                    pendingRequests.delete('DeleteBook');
+                    pendingRequests.delete('RentBook');
+                    pendingRequests.delete('ReturnBook');
+                    pendingRequests.delete('ExtendRental');
+                    pendingRequests.delete('RegisterUser');
+                    pendingRequests.delete('AddSubscription');
+                    document.querySelectorAll('button:disabled').forEach(button => button.disabled = false);
                 }
             }
         } else {
             console.error('Unexpected response format:', response);
             alert('Неожиданный формат ответа от сервера');
             pendingRequests.delete('UpdateBook');
+            pendingRequests.delete('AddBook');
+            pendingRequests.delete('DeleteBook');
+            pendingRequests.delete('RentBook');
+            pendingRequests.delete('ReturnBook');
+            pendingRequests.delete('ExtendRental');
+            pendingRequests.delete('RegisterUser');
+            pendingRequests.delete('AddSubscription');
+            document.querySelectorAll('button:disabled').forEach(button => button.disabled = false);
         }
     } catch (error) {
         console.error('Error processing response:', error, 'Response:', response);
         alert(`Ошибка обработки ответа: ${error.message}`);
         pendingRequests.delete('UpdateBook');
+        pendingRequests.delete('AddBook');
+        pendingRequests.delete('DeleteBook');
+        pendingRequests.delete('RentBook');
+        pendingRequests.delete('ReturnBook');
+        pendingRequests.delete('ExtendRental');
+        pendingRequests.delete('RegisterUser');
+        pendingRequests.delete('AddSubscription');
+        document.querySelectorAll('button:disabled').forEach(button => button.disabled = false);
         const loader = document.getElementById('loginLoader');
         if (loader) loader.classList.remove('active');
     }

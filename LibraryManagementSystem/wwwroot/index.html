@@ -11,10 +11,10 @@
 <body>
     <header>
         <h1>Библиотека</h1>
-        <button class="btn btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+        <!-- <button class="btn btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Выйти</button> -->
     </header>
     <main>
-        <input type="text" id="search" class="search-input" placeholder="Поиск по названию, автору, жанру или ISBN...">
+        <input type="text" id="search" class="search-input" placeholder="Поиск по названию, автору, жанру или ISBN..." oninput="filterBooks()">
         <div id="finesAlert" class="alert alert-error"></div>
         <section id="adminPanel" class="admin-panel">
             <div class="admin-header">
@@ -50,20 +50,20 @@
                     <div class="form-group">
                         <h3>Редактировать книгу</h3>
                         <form id="editBookForm" class="form">
-                            <select id="editBookSelect" class="select"></select>
-                            <input type="text" id="editTitle" placeholder="Название" required>
-                            <input type="text" id="editAuthor" placeholder="Автор" required>
-                            <input type="number" id="editYear" placeholder="Год" required>
-                            <input type="text" id="editCoverUrl" placeholder="URL обложки">
-                            <input type="text" id="editDescription" placeholder="Описание">
-                            <input type="text" id="editGenre" placeholder="Жанр">
-                            <input type="text" id="editISBN" placeholder="ISBN">
+                            <select id="editBookSelect" class="select" disabled title="В переработке"></select>
+                            <input type="text" id="editTitle" placeholder="Название" required disabled title="В переработке">
+                            <input type="text" id="editAuthor" placeholder="Автор" required disabled title="В переработке">
+                            <input type="number" id="editYear" placeholder="Год" required disabled title="В переработке">
+                            <input type="text" id="editCoverUrl" placeholder="URL обложки" disabled title="В переработке">
+                            <input type="text" id="editDescription" placeholder="Описание" disabled title="В переработке">
+                            <input type="text" id="editGenre" placeholder="Жанр" disabled title="В переработке">
+                            <input type="text" id="editISBN" placeholder="ISBN" disabled title="В переработке">
                             <div class="form-actions">
-                                <button type="button" class="btn btn-primary" onclick="updateBook()">
-                                    <i class="fas fa-save"></i> Сохранить
+                                <button type="button" class="btn btn-primary disabled-btn" disabled title="В переработке" oncontextmenu="showContextMenu(event, 'edit')">
+                                    <i class="fas fa-ban"></i> Сохранить
                                 </button>
-                                <button type="button" class="btn btn-danger" onclick="deleteBook()">
-                                    <i class="fas fa-trash"></i> Удалить
+                                <button type="button" class="btn btn-danger disabled-btn" disabled title="В переработке" oncontextmenu="showContextMenu(event, 'delete')">
+                                    <i class="fas fa-ban"></i> Удалить
                                 </button>
                             </div>
                         </form>
@@ -183,20 +183,20 @@
         </section>
         <div id="editModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
+                <span class="close" onclick="closeEditModal()">×</span>
                 <h3>Редактировать книгу</h3>
                 <form id="modalEditForm" class="form">
                     <input type="hidden" id="modalBookId">
-                    <input type="text" id="modalTitle" placeholder="Название" required>
-                    <input type="text" id="modalAuthor" placeholder="Автор" required>
-                    <input type="number" id="modalYear" placeholder="Год" required>
-                    <input type="text" id="modalCoverUrl" placeholder="URL обложки">
-                    <input type="text" id="modalDescription" placeholder="Описание">
-                    <input type="text" id="modalGenre" placeholder="Жанр">
-                    <input type="text" id="modalISBN" placeholder="ISBN">
+                    <input type="text" id="modalTitle" placeholder="Название" required disabled title="В переработке">
+                    <input type="text" id="modalAuthor" placeholder="Автор" required disabled title="В переработке">
+                    <input type="number" id="modalYear" placeholder="Год" required disabled title="В переработке">
+                    <input type="text" id="modalCoverUrl" placeholder="URL обложки" disabled title="В переработке">
+                    <input type="text" id="modalDescription" placeholder="Описание" disabled title="В переработке">
+                    <input type="text" id="modalGenre" placeholder="Жанр" disabled title="В переработке">
+                    <input type="text" id="modalISBN" placeholder="ISBN" disabled title="В переработке">
                     <div class="form-actions">
-                        <button type="button" class="btn btn-primary" onclick="saveBookFromModal()">
-                            <i class="fas fa-save"></i> Сохранить
+                        <button type="button" class="btn btn-primary disabled-btn" disabled title="В переработке" oncontextmenu="showContextMenu(event, 'edit')">
+                            <i class="fas fa-ban"></i> Сохранить
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
                             <i class="fas fa-times"></i> Отмена

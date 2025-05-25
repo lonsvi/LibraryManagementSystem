@@ -155,7 +155,7 @@ namespace LibraryManagementSystem
                         var loggedInUser = LibraryDbContext.LoginUser(loginData.Username.ToString(), loginData.Password.ToString());
                         if (loggedInUser != null && loggedInUser.Role == "Librarian")
                         {
-                            LibraryDbContext.CheckFines();
+                            LibraryDbContext.CheckFines(loggedInUser.Id); // Передаём userId
                         }
                         SendResponse(loggedInUser != null ? JsonConvert.SerializeObject(loggedInUser) : "Неверный логин или пароль");
                         break;
